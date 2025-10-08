@@ -1,0 +1,483 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NZS 3101 Concrete Cover Selector</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            --accent: #1f6feb;
+            --accent-soft: rgba(31, 111, 235, 0.12);
+        }
+        body {
+            margin: 0;
+            background: #f5f7fb;
+            color: #1c1f23;
+        }
+        header {
+            background: #0b1f3a;
+            color: #ffffff;
+            padding: 1.5rem clamp(1rem, 4vw, 3rem);
+        }
+        header h1 {
+            margin: 0;
+            font-size: clamp(1.6rem, 2.4vw, 2.4rem);
+            font-weight: 600;
+        }
+        header p {
+            margin-top: 0.5rem;
+            max-width: 720px;
+            font-size: 0.95rem;
+        }
+        main {
+            padding: clamp(1rem, 4vw, 3rem);
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            padding: clamp(1rem, 3vw, 2rem);
+            margin-bottom: clamp(1rem, 3vw, 2.5rem);
+        }
+        form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem 1.5rem;
+            align-items: end;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+            display: block;
+        }
+        select,
+        input[type="number"] {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #d0d7de;
+            padding: 0.55rem 0.75rem;
+            font-size: 1rem;
+            transition: border 0.2s ease, box-shadow 0.2s ease;
+        }
+        select:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 0.65rem 1.4rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        button.primary {
+            background: var(--accent);
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(31, 111, 235, 0.22);
+        }
+        button.secondary {
+            background: #e7ecf4;
+            color: #1c1f23;
+        }
+        button.generate {
+            background: #198754;
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(25, 135, 84, 0.22);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        button:not(:disabled):hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
+        }
+        .hidden {
+            display: none !important;
+        }
+        .report {
+            display: grid;
+            gap: 1.25rem;
+        }
+        .stat {
+            background: #f0f4ff;
+            border-left: 4px solid var(--accent);
+            padding: 0.95rem 1.1rem;
+            border-radius: 8px;
+        }
+        .stat strong {
+            display: block;
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+        .notes ul {
+            padding-left: 1.2rem;
+            margin: 0.5rem 0 0 0;
+        }
+        .notes li {
+            margin-bottom: 0.4rem;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            overflow-x: auto;
+        }
+        th,
+        td {
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid #e1e6ef;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+        thead th {
+            background: #0b1f3a;
+            color: #ffffff;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        tbody th {
+            text-align: left;
+            background: #f8fafc;
+            font-weight: 600;
+        }
+        td.not-permitted {
+            color: #a03b32;
+            font-weight: 600;
+        }
+        td.highlight {
+            background: rgba(31, 111, 235, 0.12);
+            font-weight: 600;
+        }
+        .disclaimer {
+            font-size: 0.85rem;
+            color: #4a5461;
+        }
+        @media (max-width: 600px) {
+            header {
+                text-align: left;
+            }
+            .actions {
+                width: 100%;
+            }
+            button {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>NZS 3101 Concrete Cover Selector</h1>
+    <p>Interactive calculator based on NZS 3101:2006 Tables 3.6 and 3.7 for determining minimum reinforcement cover. Always verify against the latest standard and project specifications.</p>
+</header>
+<main>
+    <section class="card">
+        <form id="cover-form">
+            <div>
+                <label for="life">Intended design life (years)</label>
+                <select id="life" name="life">
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <div>
+                <label for="exposure">Exposure classification</label>
+                <select id="exposure" name="exposure">
+                    <option value="A1">A1</option>
+                    <option value="A2">A2</option>
+                    <option value="B1">B1</option>
+                    <option value="B2">B2</option>
+                    <option value="C">C</option>
+                </select>
+            </div>
+            <div id="binder-wrapper" class="hidden">
+                <label for="binder">Zone C binder option</label>
+                <select id="binder" name="binder">
+                    <option value="30% FA">30% FA</option>
+                    <option value="65% GBS">65% GBS</option>
+                    <option value="8% MS">8% MS</option>
+                </select>
+            </div>
+            <div>
+                <label for="fc">Specified compressive strength f'c (MPa)</label>
+                <input id="fc" name="fc" type="number" step="0.5" min="10" value="30" required>
+            </div>
+            <div class="actions">
+                <button type="submit" class="primary">Compute</button>
+                <button type="button" class="secondary" id="reset-btn">Reset</button>
+                <button type="button" class="generate" id="pdf-btn" disabled>Download PDF</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card" id="report-card" hidden>
+        <div id="report" class="report">
+            <div class="stat" id="cover-summary"></div>
+            <div class="notes" id="notes"></div>
+            <div>
+                <h2>Table row reference</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead id="table-head"></thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card disclaimer">
+        <strong>Disclaimer</strong>
+        <p>This tool is provided for convenient checks only. The encoded table values are based on NZS 3101:2006 (Tables 3.6 and 3.7) as transcribed. Always confirm results against the full standard, project requirements, and engineering judgement.</p>
+    </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-YcsIPHQi65O0zOy7YmXfA2ioTba9TFes2xNi85cvPkYDe/GWcdef/frkCxNwszF2lRwVEKeX5JZwu2w3TNqYvA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    const FC_COLS_50 = [20, 25, 30, 35, 40, 45, 50, "60-100"];
+    const FC_COLS_100 = [25, 30, 35, 40, 45, 50, "60-100"];
+
+    const COVER_50 = {
+        A1: {20: 25, 25: 25, 30: 20, 35: 20, 40: 20, 45: 20, 50: 20, "60-100": 20},
+        A2: {20: 40, 25: 35, 30: 30, 35: 30, 40: 30, 45: 25, 50: 25, "60-100": 20},
+        B1: {20: 50, 25: 40, 30: 35, 35: 35, 40: 30, 45: 30, 50: 30, "60-100": 25},
+        B2: {20: null, 25: null, 30: 45, 35: 40, 40: 35, 45: 30, 50: 30, "60-100": 25},
+        C_FA30: {20: null, 25: null, 30: null, 35: null, 40: 60, 45: 50, 50: 50, "60-100": 50},
+        C_GBS65: {20: null, 25: null, 30: null, 35: null, 40: null, 45: 50, 50: 50, "60-100": 50},
+        C_MS8: {20: null, 25: null, 30: null, 35: null, 40: null, 45: 60, 50: 50, "60-100": 50}
+    };
+
+    const COVER_100 = {
+        A1: {25: 35, 30: 30, 35: 30, 40: 30, 45: 30, 50: 30, "60-100": 25},
+        A2: {25: 50, 30: 40, 35: 40, 40: 35, 45: 35, 50: 35, "60-100": 30},
+        B1: {25: 55, 30: 50, 35: 45, 40: 40, 45: 40, 50: 35, "60-100": 30},
+        B2: {25: null, 30: 65, 35: 55, 40: 50, 45: 45, 50: 40, "60-100": 35},
+        C_FA30: {25: null, 30: null, 35: null, 40: null, 45: 60, 50: 50, "60-100": 50},
+        C_GBS65: {25: null, 30: null, 35: null, 40: null, 45: 60, 50: 50, "60-100": 50},
+        C_MS8: {25: null, 30: null, 35: null, 40: null, 45: null, 50: 60, "60-100": 60}
+    };
+
+    const C_BINDER_OPTIONS = {
+        "30% FA": "C_FA30",
+        "65% GBS": "C_GBS65",
+        "8% MS": "C_MS8"
+    };
+
+    const C_BINDER_LABEL_BY_KEY = Object.entries(C_BINDER_OPTIONS).reduce((acc, entry) => {
+        const [label, key] = entry;
+        acc[key] = label;
+        return acc;
+    }, {});
+
+    const labelMap = {
+        A1: "A1 (GP/GB/HE)",
+        A2: "A2 (GP/GB/HE)",
+        B1: "B1 (GP/GB/HE)",
+        B2: "B2 (GP/GB/HE)",
+        C_FA30: "C - 30% FA",
+        C_GBS65: "C - 65% GBS",
+        C_MS8: "C - 8% MS"
+    };
+
+    const lifeField = document.getElementById("life");
+    const exposureField = document.getElementById("exposure");
+    const binderWrapper = document.getElementById("binder-wrapper");
+    const binderField = document.getElementById("binder");
+    const fcField = document.getElementById("fc");
+    const form = document.getElementById("cover-form");
+    const reportCard = document.getElementById("report-card");
+    const coverSummary = document.getElementById("cover-summary");
+    const notesBlock = document.getElementById("notes");
+    const tableHead = document.getElementById("table-head");
+    const tableBody = document.getElementById("table-body");
+    const pdfButton = document.getElementById("pdf-btn");
+    const resetButton = document.getElementById("reset-btn");
+
+    function selectFcColumn(fc, columns) {
+        const has60Bucket = columns.some((col) => typeof col === "string" && col.includes("60"));
+        if (has60Bucket && fc >= 60) {
+            return "60-100";
+        }
+        const numericCols = columns.filter((col) => typeof col === "number").sort((a, b) => a - b);
+        for (const col of numericCols) {
+            if (fc <= col) {
+                return col;
+            }
+        }
+        return numericCols[numericCols.length - 1];
+    }
+
+    function lookupCover(exposure, fc, life, binderLabel) {
+        if (![50, 100].includes(life)) {
+            return { error: "Design life must be 50 or 100 years." };
+        }
+        if (!["A1", "A2", "B1", "B2", "C"].includes(exposure)) {
+            return { error: "Unsupported exposure classification." };
+        }
+        const table = life === 50 ? COVER_50 : COVER_100;
+        const columns = life === 50 ? FC_COLS_50 : FC_COLS_100;
+
+        let key = exposure;
+        let appliedBinderLabel = null;
+
+        if (exposure === "C") {
+            const binderKey = C_BINDER_OPTIONS[binderLabel];
+            if (!binderKey || !table[binderKey]) {
+                return { error: "Select a binder option for exposure C (30% FA, 65% GBS, or 8% MS)." };
+            }
+            key = binderKey;
+            appliedBinderLabel = binderLabel;
+        }
+
+        const row = table[key];
+        if (!row) {
+            return { error: "Configuration error: data row not found." };
+        }
+
+        const fcColumn = selectFcColumn(fc, columns);
+        const cover = Object.prototype.hasOwnProperty.call(row, fcColumn) ? row[fcColumn] : null;
+
+        const notes = [];
+        if (["A1", "A2", "B1", "B2"].includes(exposure)) {
+            notes.push("Cement binder type: GP, GB or HE (per table header).");
+        } else {
+            notes.push("Zone C: total binder \u2265 350 kg/m^3 and water-to-binder ratio \u2264 0.45.");
+            notes.push("Zone C minimum cover is 50 mm (table note).");
+        }
+
+        if (cover === null) {
+            notes.push("Combination not permitted/defined in the table. Increase f'c or revise binder selection.");
+        }
+
+        return {
+            cover,
+            notes,
+            fcColumn,
+            row,
+            columns,
+            life,
+            exposure,
+            key,
+            binderLabel: appliedBinderLabel,
+            label: labelMap[key]
+        };
+    }
+
+    function renderReport(result, fc) {
+        const { cover, notes, fcColumn, row, columns, life, exposure, binderLabel, label } = result;
+        const fcDisplay = typeof fcColumn === "number" ? `${fcColumn}` : fcColumn;
+        const binderText = exposure === "C" && binderLabel ? ` (${binderLabel})` : "";
+
+        let summaryHtml = `<strong>Selection outcome</strong>`;
+        summaryHtml += `<div>Exposure: <strong>${exposure}${binderText}</strong></div>`;
+        summaryHtml += `<div>Design life: <strong>${life} years</strong></div>`;
+        summaryHtml += `<div>Specified f'c: <strong>${fc.toFixed(1)} MPa</strong> (column ${fcDisplay})</div>`;
+        if (cover === null) {
+            summaryHtml += `<div style="margin-top:0.6rem;">Result: <strong>Not permitted/defined</strong> for this combination.</div>`;
+        } else {
+            const enforcedCover = exposure === "C" && cover < 50 ? 50 : cover;
+            summaryHtml += `<div style="margin-top:0.6rem;">Minimum required cover: <strong>${enforcedCover} mm</strong>${enforcedCover !== cover ? " (table note enforced)" : ""}</div>`;
+        }
+        coverSummary.innerHTML = summaryHtml;
+
+        if (notes.length) {
+            const notesItems = notes.map((note) => `<li>${note}</li>`).join("");
+            notesBlock.innerHTML = `<strong>Notes</strong><ul>${notesItems}</ul>`;
+        } else {
+            notesBlock.innerHTML = "";
+        }
+
+        const headCells = ["f'c (MPa)", ...columns];
+        tableHead.innerHTML = `<tr>${headCells.map((col) => `<th>${col}</th>`).join("")}</tr>`;
+
+        const rowCells = columns.map((col) => {
+            const value = row[col];
+            const cellClasses = [];
+            if (col === fcColumn) {
+                cellClasses.push("highlight");
+            }
+            if (value === null) {
+                cellClasses.push("not-permitted");
+            }
+            const classAttr = cellClasses.length ? ` class="${cellClasses.join(" ")}"` : "";
+            return `<td${classAttr}>${value === null ? "-" : value}</td>`;
+        });
+        tableBody.innerHTML = `<tr><th>${label}</th>${rowCells.join("")}</tr>`;
+
+        reportCard.hidden = false;
+        pdfButton.disabled = false;
+    }
+
+    exposureField.addEventListener("change", () => {
+        const showBinder = exposureField.value === "C";
+        binderWrapper.classList.toggle("hidden", !showBinder);
+    });
+
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const life = parseInt(lifeField.value, 10);
+        const exposure = exposureField.value;
+        const fc = parseFloat(fcField.value);
+
+        if (Number.isNaN(fc)) {
+            window.alert("Enter a valid f'c value in MPa.");
+            return;
+        }
+
+        const binderLabel = exposure === "C" ? binderField.value : null;
+        const result = lookupCover(exposure, fc, life, binderLabel);
+
+        if (result.error) {
+            window.alert(result.error);
+            return;
+        }
+
+        renderReport(result, fc);
+    });
+
+    resetButton.addEventListener("click", () => {
+        lifeField.value = "50";
+        exposureField.value = "A1";
+        binderField.value = "30% FA";
+        binderWrapper.classList.add("hidden");
+        fcField.value = "30";
+        reportCard.hidden = true;
+        pdfButton.disabled = true;
+        tableHead.innerHTML = "";
+        tableBody.innerHTML = "";
+        coverSummary.innerHTML = "";
+        notesBlock.innerHTML = "";
+    });
+
+    pdfButton.addEventListener("click", () => {
+        if (!window.html2pdf) {
+            window.alert("PDF generator failed to load. Please check your internet connection.");
+            return;
+        }
+        const opt = {
+            filename: "nzs3101_cover_report.pdf",
+            margin: 10,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+        };
+        window.html2pdf().set(opt).from(document.getElementById("report")).save();
+    });
+</script>
+</body>
+</html>
